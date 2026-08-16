@@ -2684,6 +2684,7 @@ export function App() {
                   setDirty(false)
                 }}
                 currentFilePath={path}
+                onSettingsSaved={setAiSettings}
               />
             ) : (
               <button

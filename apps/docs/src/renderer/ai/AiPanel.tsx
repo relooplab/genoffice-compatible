@@ -3,7 +3,7 @@ import type { Editor } from '@tiptap/core'
 import type { Block } from '@genoffice/docx-engine'
 import { AgentLoop, composeSkills, type AgentImage } from '@genoffice/agent-core'
 import type { AiSettings, AttachmentAddResult, AttachmentMeta } from '../../shared/ipc'
-import { ATTACHMENT_IMAGE_EXTS } from '../../shared/ipc'
+import { ATTACHMENT_IMAGE_EXTS, AI_PROVIDERS } from '../../shared/ipc'
 import type { PmNode } from '../editor/convert'
 import { findNumId, type NumIds } from './protocol'
 import { markDocSeen } from './tools'
@@ -13,7 +13,7 @@ import { DOCS_AGENT_MAX_TURNS, DOCS_CONTINUE_INSTRUCTION } from './continuation'
 import { createFilesSkill } from './files-skill'
 import { createElectronTransport } from './transport'
 import { useI18n, t as tModule, aiLangDirective, type StringKey } from '../i18n/locale'
-import { Markdown } from '@genoffice/ui'
+import { AiProviderSettings, IconSettings, Markdown } from '@genoffice/ui'
 import { AiComposer, AiTypingIndicator } from '@genoffice/ui'
 import { GensparkMark } from '../components/icons'
 import sendEnterOn from '../assets/send-enter-on.png'
@@ -262,6 +262,8 @@ interface AiPanelProps {
   onCollapse?: () => void
   /** Absolute path of the currently open file (used for chat-history persistence) */
   filePath?: string | null
+  /** persist AI provider settings chosen in the settings modal and refresh parent state */
+  onSettingsSaved?: (settings: AiSettings) => void
 }
 
 export function AiPanel({
@@ -275,6 +277,7 @@ export function AiPanel({
   onExpand,
   onCollapse,
   filePath,
+  onSettingsSaved,
 }: AiPanelProps) {
   const { t } = useI18n()
   const [input, setInput] = useState('')
@@ -290,6 +293,17 @@ export function AiPanel({
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([])
   const [attachNotice, setAttachNotice] = useState<string | null>(null)
+  /** AI provider settings modal */
+  const [showProviderSettings, setShowProviderSettings] = useState(false)
+  const [gskAuth, setGskAuth] = useState<{ loggedIn: boolean; email?: string } | undefined>(undefined)
+  /** open the provider settings modal, refreshing the Genspark status inline */
+  const openProviderSettings = () => {
+    void window.desktop
+      .aiGskStatus(true)
+      .then(setGskAuth)
+      .catch(() => setGskAuth({ loggedIn: false }))
+    setShowProviderSettings(true)
+  }
   /** data-URL previews for image attachments, keyed by path (Genspark composer thumbnails) */
   const [attachmentPreviews, setAttachmentPreviews] = useState<Record<string, string>>({})
   /** image paths with a read already issued — one readAttachmentImage per attach, even while pending */
@@ -654,9 +668,10 @@ export function AiPanel({
             }
             return next
           })
-          // Signed-out failures get an inline sign-in button; detected via
-          // gsk status rather than matching the localized error text
-          void window.desktop
+          // Signed-out failures get an inline sign-in button; only relevant for
+          // the Genspark provider (key providers show an API-key error instead)
+          if (settingsRef.current.provider === 'genspark') {
+            void window.desktop
             .aiGskStatus()
             .then((status) => {
               if (status.loggedIn) return
@@ -670,6 +685,7 @@ export function AiPanel({
               })
             })
             .catch(() => {})
+          }
           setBusy(false)
         },
       },
@@ -949,10 +965,18 @@ export function AiPanel({
       />
       <div className="ai-panel-header">
         <span className="ai-panel-title">
-          <GensparkMark size={22} />
-          {t('aiPanelTitle')}
+          {settings.provider === 'genspark' && <GensparkMark size={22} />}
+          {AI_PROVIDERS.find((p) => p.id === settings.provider)?.label ?? t('aiPanelTitle')}
         </span>
         <div className="ai-panel-header-actions">
+          <button
+            className="ai-header-btn"
+            onClick={openProviderSettings}
+            data-tip={t('aiSettingsBtn')}
+            aria-label={t('aiSettingsBtn')}
+          >
+            <IconSettings size={16} />
+          </button>
           {chat.length > 0 && (
             <button
               className="ai-header-btn"
@@ -1254,6 +1278,34 @@ export function AiPanel({
           }
         />
       </div>
+      {showProviderSettings && (
+        <AiProviderSettings
+          providers={AI_PROVIDERS}
+          settings={settings}
+          labels={{
+            title: t('aiProviderSettingsTitle'),
+            provider: t('aiProviderLabel'),
+            apiKey: t('aiApiKeyLabel'),
+            baseUrl: t('aiBaseUrlLabel'),
+            model: t('aiModelLabel'),
+            modelPlaceholder: t('aiModelPlaceholder'),
+            save: t('aiProviderSave'),
+            cancel: t('aiProviderCancel'),
+            gskLogin: t('aiGskLoginBtn'),
+            gskLoggedIn: t('aiProviderLoggedIn'),
+            gskNotLoggedIn: t('aiProviderNotLoggedIn'),
+            keyPlaceholder: 'API Key',
+          }}
+          gskAuth={gskAuth}
+          onOpenLogin={() => void window.desktop.aiGskLogin()}
+          onSave={(draft) => {
+            setShowProviderSettings(false)
+            void window.desktop.setAiSettings(draft)
+            onSettingsSaved?.(draft)
+          }}
+          onClose={() => setShowProviderSettings(false)}
+        />
+      )}
     </aside>
   )
 }

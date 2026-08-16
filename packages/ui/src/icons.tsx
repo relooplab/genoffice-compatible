@@ -38,6 +38,16 @@ export function IconStop(props: IconProps) {
   )
 }
 
+/** gear icon for the AI provider settings entry point */
+export function IconSettings(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="8" cy="8" r="2.3" />
+      <path d="M8 2V3.4M8 12.6V14M2 8h1.4M12.6 8H14M4 4l1 1M11 11l1 1M12 4l-1 1M5 11l-1 1" />
+    </Svg>
+  )
+}
+
 /** return/enter arrow (↵) for the icon-only send button */
 export function IconEnter(props: IconProps) {
   return (

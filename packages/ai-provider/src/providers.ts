@@ -24,6 +24,9 @@ export function gensparkAttributionHeaders(baseUrl?: string): Record<string, str
     : {}
 }
 
+/** Default endpoint for the OpenAI-compatible "custom" provider when none is configured. */
+export const DEFAULT_CUSTOM_BASE_URL = 'https://api.openai.com/v1'
+
 export const AI_PROVIDERS: AiProviderMeta[] = [
   {
     id: 'genspark',
@@ -101,10 +104,12 @@ export function defaultAiSettings(
     providers[meta.id] = {
       apiKey: defaultApiKeys?.[meta.id] ?? '',
       model: meta.defaultModel,
-      baseUrl: meta.needsBaseUrl ? '' : undefined,
+      baseUrl: meta.needsBaseUrl ? DEFAULT_CUSTOM_BASE_URL : undefined,
     }
   }
-  return { provider: 'genspark', providers }
+  // The default provider is an OpenAI-compatible endpoint keyed by an API key,
+  // so no Genspark account (gsk login) is required out of the box.
+  return { provider: 'custom', providers }
 }
 
 /**
@@ -122,7 +127,7 @@ export function resolveAiSettings(
       defaults.providers.custom = {
         apiKey: stored.apiKey,
         model: stored.model ?? '',
-        baseUrl: stored.baseUrl ?? 'https://api.openai.com/v1',
+        baseUrl: stored.baseUrl ?? DEFAULT_CUSTOM_BASE_URL,
       }
     }
     return defaults

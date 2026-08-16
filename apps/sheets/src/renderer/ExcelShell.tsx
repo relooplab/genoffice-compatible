@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { platformShortcuts } from '@genoffice/i18n'
 import { SHAPE_GALLERY_GROUPS, ShapePreview } from '@genoffice/ui'
+import type { AiSettings } from '@genoffice/ai-provider'
 
 import {
   CaretIcon,
@@ -147,6 +148,10 @@ interface ExcelShellProps {
   readonly onNewChat: () => void
   readonly onUndo: () => void
   readonly onCommand: (command: string) => void
+  /// Current AI provider settings (provider/apiKey/baseUrl/model), for the settings modal.
+  readonly aiSettings: AiSettings | null
+  /// Persist the AI provider settings chosen in the settings modal and refresh app state.
+  readonly onAiSettingsSaved?: ((settings: AiSettings) => void) | undefined
   /// Left side of the status bar (ready / streaming / AI progress messages).
   readonly statusMessage: string
   /// Zoom of the active sheet in percent, echoed by the status-bar slider.
@@ -191,6 +196,8 @@ interface ExcelShellProps {
   readonly onGetAnchorValue: () => number | string | null
   /// A1 label of the active cell, echoed live by the Name Box.
   readonly activeCellA1: string
+  /// Full A1 notation of the current selection (range), for the AI chat scope hint.
+  readonly activeSelection: string
   /// Name Box / Go To jump; returns an error message, or null on success.
   readonly onGoToReference: (ref: string) => string | null
   readonly onListDefinedNames: () => readonly { name: string; ref: string }[]
@@ -250,6 +257,7 @@ export function ExcelShell({
   onGetActiveCell,
   onGetAnchorValue,
   activeCellA1,
+  activeSelection,
   onGoToReference,
   onListDefinedNames,
   onApplyFormula,
@@ -274,6 +282,8 @@ export function ExcelShell({
   onAutoSaveChange,
   selectedChart,
   pageLayout,
+  aiSettings,
+  onAiSettingsSaved,
 }: ExcelShellProps): React.JSX.Element {
   const { t } = useI18n()
   const [activeTab, setActiveTab] = useState<RibbonTab>('Home')
@@ -452,6 +462,9 @@ export function ExcelShell({
           onUndo={onUndo}
           onExpand={() => setIsCopilotOpen(true)}
           onCollapse={() => setIsCopilotOpen(false)}
+          settings={aiSettings}
+          onSettingsSaved={onAiSettingsSaved}
+          selection={activeSelection}
         />
         <div className="sheet-main">
           {/* Excel's formula-bar row, Name Box only for now (fx bar TBD). */}

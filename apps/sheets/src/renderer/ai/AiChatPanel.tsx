@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AiComposer, AiTypingIndicator } from '@genoffice/ui'
+import { AiComposer, AiTypingIndicator, AiProviderSettings, IconSettings } from '@genoffice/ui'
+import { AI_PROVIDERS, type AiSettings } from '@genoffice/ai-provider'
 import { GensparkMark } from '../ribbon-icons'
 import type { ChangePlan } from '../../domain/workbook.types'
 import { ATTACHMENT_IMAGE_EXTS, type AttachmentMeta } from '../../shared/desktop-api'
@@ -214,6 +215,9 @@ export function AiChatPanel({
   onUndo,
   onExpand,
   onCollapse,
+  settings,
+  onSettingsSaved,
+  selection,
 }: {
   readonly isOpen: boolean
   /** the workbook has cells with content — empty workbooks get "build me a sheet" copy instead */
@@ -242,6 +246,12 @@ export function AiChatPanel({
   readonly onUndo: () => void
   readonly onExpand: () => void
   readonly onCollapse: () => void
+  /** current AI provider settings (provider/apiKey/baseUrl/model); null before load */
+  readonly settings: AiSettings | null
+  /** persist the AI provider settings chosen in the settings modal */
+  readonly onSettingsSaved?: ((settings: AiSettings) => void) | undefined
+  /** Full A1 notation of the current selection (range), for the scope hint; '' when none */
+  readonly selection?: string | undefined
 }): React.JSX.Element {
   const { t } = useI18n()
   const chatRef = useRef<HTMLDivElement | null>(null)
@@ -254,6 +264,16 @@ export function AiChatPanel({
   const [attachmentPreviews, setAttachmentPreviews] = useState<Record<string, string>>({})
   /** image paths with a read already issued — one readAttachmentImage per attach, even while pending */
   const previewRequestedRef = useRef(new Set<string>())
+  /** AI provider settings modal */
+  const [showProviderSettings, setShowProviderSettings] = useState(false)
+  const [gskAuth, setGskAuth] = useState<{ loggedIn: boolean; email?: string } | undefined>(undefined)
+  const openProviderSettings = () => {
+    void window.desktopApi
+      .aiGskStatus(true)
+      .then(setGskAuth)
+      .catch(() => setGskAuth({ loggedIn: false }))
+    setShowProviderSettings(true)
+  }
   useEffect(() => {
     // previews cover the composer plus every image echoed on a sent/history message
     // (history chips re-read the file by its stored path; a deleted file keeps the placeholder)
@@ -461,10 +481,18 @@ export function AiChatPanel({
       />
       <header className="ai-panel-header">
         <span className="ai-panel-title">
-          <GensparkMark size={22} />
-          Genspark
+          {settings?.provider === 'genspark' && <GensparkMark size={22} />}
+          {AI_PROVIDERS.find((p) => p.id === settings?.provider)?.label ?? 'Genspark'}
         </span>
         <div className="ai-panel-header-actions">
+          <button
+            className="ai-header-btn"
+            onClick={openProviderSettings}
+            data-tip={t('aiSettingsBtn')}
+            aria-label={t('aiSettingsBtn')}
+          >
+            <IconSettings size={16} />
+          </button>
           {(chat.length > 0 || historicChat.length > 0) && (
             <button
               className="ai-header-btn"
@@ -625,6 +653,9 @@ export function AiChatPanel({
 
       <div className="ai-composer">
         {attachNotice && <div className="ai-attach-notice">{attachNotice}</div>}
+        {selection ? (
+          <div className="ai-scope-hint">{t('aiScopeSelection', { range: selection })}</div>
+        ) : null}
         <AiComposer
           header={
             attachments.length > 0 && (
@@ -727,6 +758,34 @@ export function AiChatPanel({
           onPasteFiles={onPasteFiles}
         />
       </div>
+      {settings && showProviderSettings && (
+        <AiProviderSettings
+          providers={AI_PROVIDERS}
+          settings={settings}
+          labels={{
+            title: t('aiProviderSettingsTitle'),
+            provider: t('aiProviderLabel'),
+            apiKey: t('aiApiKeyLabel'),
+            baseUrl: t('aiBaseUrlLabel'),
+            model: t('aiModelLabel'),
+            modelPlaceholder: t('aiModelPlaceholder'),
+            save: t('aiProviderSave'),
+            cancel: t('aiProviderCancel'),
+            gskLogin: t('aiGskLoginBtn'),
+            gskLoggedIn: t('aiProviderLoggedIn'),
+            gskNotLoggedIn: t('aiProviderNotLoggedIn'),
+            keyPlaceholder: 'API Key',
+          }}
+          gskAuth={gskAuth}
+          onOpenLogin={() => void window.desktopApi.aiGskLogin()}
+          onSave={(draft) => {
+            setShowProviderSettings(false)
+            void window.desktopApi.setAiSettings(draft)
+            onSettingsSaved?.(draft)
+          }}
+          onClose={() => setShowProviderSettings(false)}
+        />
+      )}
     </aside>
   )
 }

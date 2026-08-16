@@ -2486,10 +2486,9 @@ const activeAiStreams = new Map<string, AbortController>()
 export function registerAiIpc(): void {
   ipcMain.handle('ai:get-settings', (): AiSettings => {
     const stored = readJson<Partial<AiSettings> & LegacyAiSettings>(SETTINGS_PATH(), {})
-    const settings = resolveAiSettings(stored, defaultAiSettings())
-    // AI features all go through Genspark (gsk login); legacy settings with another provider are reset
-    settings.provider = 'genspark'
-    return settings
+    // Respect the stored provider choice (defaults to the OpenAI-compatible
+    // "custom" provider, see defaultAiSettings) — no Genspark sign-in required.
+    return resolveAiSettings(stored, defaultAiSettings())
   })
 
   // Genspark account (gsk login state): auth source for AI features; the frontend uses it to prompt login when logged out

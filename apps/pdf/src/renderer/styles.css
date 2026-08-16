@@ -3815,3 +3815,138 @@ button {
   flex: 1;
   min-width: 0;
 }
+/* AI provider settings modal (shared @genoffice/ui component) — pdf styles its
+   own modals inline, so this self-contained block covers the shared classes. */
+.ai-provider-settings {
+  max-width: 460px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 45%);
+  padding: 24px;
+}
+
+.modal {
+  background: var(--surface, #fff);
+  color: var(--text, inherit);
+  border: 1px solid var(--border-strong, #ddd);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 22%);
+  max-height: 85vh;
+  overflow: auto;
+  width: 100%;
+}
+
+.ai-provider-settings .modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.ai-provider-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.ai-provider-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.ai-provider-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border-strong, #bbb);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: inherit;
+}
+
+.ai-provider-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ai-provider-gsk {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ai-provider-status {
+  font-size: 13px;
+}
+
+.ai-provider-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modal-actions button {
+  padding: 7px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong, #bbb);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.provider-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.provider-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-strong, #bbb);
+  background: transparent;
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.provider-tab-active {
+  border-color: var(--accent);
+  background: var(--accent-soft, rgb(0 0 0 / 8%));
+  color: var(--accent);
+  font-weight: 600;
+}
+

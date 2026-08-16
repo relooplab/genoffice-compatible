@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, ReactElement, ReactNode } from 'react'
 import { AgentLoop, composeSkills } from '@genoffice/agent-core'
-import type { AiSettings } from '@genoffice/ai-provider'
-import { AiComposer, AiTypingIndicator, Markdown } from '@genoffice/ui'
+import { AI_PROVIDERS, type AiSettings } from '@genoffice/ai-provider'
+import { AiComposer, AiTypingIndicator, Markdown, AiProviderSettings, IconSettings } from '@genoffice/ui'
 import type { Editor } from '@tiptap/core'
 import { aiLangDirective, t as tGlobal, useI18n } from '../i18n/locale'
 import sendEnterOn from '../assets/send-enter-on.png'
@@ -111,6 +111,18 @@ export function AiPanel({
   }, [panelWidth])
 
   const settingsRef = useRef<AiSettings | null>(null)
+  /** current AI provider settings for the header title + settings modal */
+  const [settings, setSettings] = useState<AiSettings | null>(null)
+  const [showProviderSettings, setShowProviderSettings] = useState(false)
+  useEffect(() => {
+    void window.markdownApi
+      .getAiSettings()
+      .then((s) => {
+        settingsRef.current = s
+        setSettings(s)
+      })
+      .catch(() => {})
+  }, [])
   const langRef = useRef(lang)
   langRef.current = lang
   const depsRef = useRef(deps)
@@ -342,6 +354,7 @@ export function AiPanel({
     void (async () => {
       try {
         settingsRef.current = await window.markdownApi.getAiSettings()
+        setSettings(settingsRef.current)
         await loop.run(instruction)
       } catch (err) {
         patchLast({
@@ -440,10 +453,18 @@ export function AiPanel({
       />
       <header className="ai-panel-header">
         <span className="ai-panel-title">
-          <GensparkMark size={22} />
-          Genspark
+          {settings?.provider === 'genspark' && <GensparkMark size={22} />}
+          {AI_PROVIDERS.find((p) => p.id === settings?.provider)?.label ?? 'Genspark'}
         </span>
         <div className="ai-panel-header-actions">
+          <button
+            className="ai-header-btn"
+            onClick={() => setShowProviderSettings(true)}
+            data-tip={t('aiSettingsBtn')}
+            aria-label={t('aiSettingsBtn')}
+          >
+            <IconSettings size={16} />
+          </button>
           {chat.length > 0 && (
             <button
               className="ai-header-btn"
@@ -635,6 +656,33 @@ export function AiPanel({
           onStop={stop}
         />
       </div>
+      {settings && showProviderSettings && (
+        <AiProviderSettings
+          providers={AI_PROVIDERS}
+          settings={settings}
+          labels={{
+            title: t('aiProviderSettingsTitle'),
+            provider: t('aiProviderLabel'),
+            apiKey: t('aiApiKeyLabel'),
+            baseUrl: t('aiBaseUrlLabel'),
+            model: t('aiModelLabel'),
+            modelPlaceholder: t('aiModelPlaceholder'),
+            save: t('aiProviderSave'),
+            cancel: t('aiProviderCancel'),
+            gskLogin: t('aiGskLoginBtn'),
+            gskLoggedIn: t('aiProviderLoggedIn'),
+            gskNotLoggedIn: t('aiProviderNotLoggedIn'),
+            keyPlaceholder: 'API Key',
+          }}
+          onSave={(draft) => {
+            setShowProviderSettings(false)
+            settingsRef.current = draft
+            void window.markdownApi.setAiSettings(draft)
+            setSettings(draft)
+          }}
+          onClose={() => setShowProviderSettings(false)}
+        />
+      )}
     </aside>
   )
 }

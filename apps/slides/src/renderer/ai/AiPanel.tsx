@@ -8,7 +8,7 @@ import {
 } from '@genoffice/agent-core'
 import type { RenderSlide } from '@genoffice/pptx-render'
 import type { AiSettings, AttachmentAddResult, AttachmentMeta } from '../../shared/ipc'
-import { ATTACHMENT_IMAGE_EXTS } from '../../shared/ipc'
+import { ATTACHMENT_IMAGE_EXTS, AI_PROVIDERS } from '../../shared/ipc'
 import {
   createSlidesSkill,
   type DeckAccess,
@@ -22,7 +22,7 @@ import { createElectronTransport } from './transport'
 import { renderSlidesToPngBase64 } from '../export-render'
 import { isQcEnabled, mergeQcPages, qcSlidePage, QC_MAX_PAGES } from './slide-qc'
 import { useI18n, t as tGlobal, aiLangDirective, type TFunc } from '../i18n/locale'
-import { Markdown } from '@genoffice/ui'
+import { Markdown, AiProviderSettings, IconSettings } from '@genoffice/ui'
 import { GensparkMark } from '../components/icons'
 import sendEnterOn from '../assets/send-enter-on.png'
 import sendEnterOff from '../assets/send-enter-off.png'
@@ -285,6 +285,8 @@ interface AiPanelProps {
   onDeckProgress?: (event: DeckProgressEvent | null) => void
   /** Absolute path of the currently open file (for chat history persistence) */
   currentFilePath?: string | null
+  /** persist AI provider settings chosen in the settings modal and refresh parent state */
+  onSettingsSaved?: ((settings: AiSettings) => void) | undefined
 }
 
 /** Some locales already end the label with an ellipsis — normalize to exactly one. */
@@ -363,6 +365,7 @@ export function AiPanel({
   onPathChange,
   onDeckProgress,
   currentFilePath,
+  onSettingsSaved,
 }: AiPanelProps) {
   const { t } = useI18n()
   const [input, setInput] = useState('')
@@ -475,6 +478,16 @@ export function AiPanel({
   onDeckProgressRef.current = onDeckProgress
   const settingsRef = useRef(settings)
   settingsRef.current = settings
+  /** AI provider settings modal */
+  const [showProviderSettings, setShowProviderSettings] = useState(false)
+  const [gskAuth, setGskAuth] = useState<{ loggedIn: boolean; email?: string } | undefined>(undefined)
+  const openProviderSettings = () => {
+    void window.slidesApi
+      .aiGskStatus(true)
+      .then(setGskAuth)
+      .catch(() => setGskAuth({ loggedIn: false }))
+    setShowProviderSettings(true)
+  }
   const imagesRef = useRef(images)
   imagesRef.current = images
   const attachmentsRef = useRef(attachments)
@@ -1262,9 +1275,10 @@ export function AiPanel({
             }
             return next
           })
-          // Signed-out failures get an inline sign-in button; detected via
-          // gsk status rather than matching the localized error text
-          void window.slidesApi
+          // Signed-out failures get an inline sign-in button; only relevant for
+          // the Genspark provider (key providers show an API-key error instead)
+          if (settingsRef.current.provider === 'genspark') {
+            void window.slidesApi
             .aiGskStatus()
             .then((status) => {
               if (status.loggedIn) return
@@ -1278,6 +1292,7 @@ export function AiPanel({
               })
             })
             .catch(() => {})
+          }
           void finishHistoryBatch().finally(() => setBusy(false))
         },
       },
@@ -1693,10 +1708,18 @@ export function AiPanel({
       />
       <div className="ai-panel-header">
         <span className="ai-panel-title">
-          <GensparkMark size={22} />
-          {t('aiPanelTitle')}
+          {settings.provider === 'genspark' && <GensparkMark size={22} />}
+          {AI_PROVIDERS.find((p) => p.id === settings.provider)?.label ?? t('aiPanelTitle')}
         </span>
         <div className="ai-panel-header-actions">
+          <button
+            className="ai-header-btn"
+            onClick={openProviderSettings}
+            data-tip={t('aiSettingsBtn')}
+            aria-label={t('aiSettingsBtn')}
+          >
+            <IconSettings size={16} />
+          </button>
           {chat.length > 0 && (
             <button
               className="ai-header-btn"
@@ -1932,6 +1955,15 @@ export function AiPanel({
       ) : (
         <div className="ai-composer">
           {attachNotice && <div className="ai-attach-notice">{attachNotice}</div>}
+          <div className="ai-scope-hint">
+            {t('aiScopeSlide', { n: current + 1 })}
+            {selectedIds.length > 0 && (
+              <>
+                {'  •  '}
+                {t('aiScopeSlideSelected', { count: selectedIds.length })}
+              </>
+            )}
+          </div>
           <div className="ai-input-box">
             {attachments.length > 0 && (
               <div className="ai-attachments" onScroll={onAttachmentsScroll}>
@@ -2051,6 +2083,34 @@ export function AiPanel({
             </div>
           </div>
         </div>
+      )}
+      {showProviderSettings && (
+        <AiProviderSettings
+          providers={AI_PROVIDERS}
+          settings={settings}
+          labels={{
+            title: t('aiProviderSettingsTitle'),
+            provider: t('aiProviderLabel'),
+            apiKey: t('aiApiKeyLabel'),
+            baseUrl: t('aiBaseUrlLabel'),
+            model: t('aiModelLabel'),
+            modelPlaceholder: t('aiModelPlaceholder'),
+            save: t('aiProviderSave'),
+            cancel: t('aiProviderCancel'),
+            gskLogin: t('aiGskLoginBtn'),
+            gskLoggedIn: t('aiProviderLoggedIn'),
+            gskNotLoggedIn: t('aiProviderNotLoggedIn'),
+            keyPlaceholder: 'API Key',
+          }}
+          gskAuth={gskAuth}
+          onOpenLogin={() => void window.slidesApi.aiGskLogin()}
+          onSave={(draft) => {
+            setShowProviderSettings(false)
+            void window.slidesApi.setAiSettings(draft)
+            onSettingsSaved?.(draft)
+          }}
+          onClose={() => setShowProviderSettings(false)}
+        />
       )}
     </aside>
   )

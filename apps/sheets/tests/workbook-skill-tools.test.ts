@@ -83,6 +83,17 @@ describe('buildWorkbookContext', () => {
     expect(text).toContain('Current selection: B2:C4')
   })
 
+  it('embeds the selected range values so the model sees what the user selected', () => {
+    const deps = fakeDeps({
+      readCells: (addresses) =>
+        Object.fromEntries(addresses.map((a) => [a, { value: `v-${a}` }])),
+    })
+    const text = buildWorkbookContext(deps)
+    expect(text).toContain('Selection values:')
+    expect(text).toContain('B2 = v-B2')
+    expect(text).toContain('C4 = v-C4')
+  })
+
   it('lists merged ranges and charts when present', () => {
     const deps = fakeDeps({
       getActiveSheetInfo: () => ({

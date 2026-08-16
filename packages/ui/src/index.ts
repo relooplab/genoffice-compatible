@@ -1,7 +1,9 @@
 export { AiComposer } from './AiComposer'
+export { AiProviderSettings } from './AiProviderSettings'
+export type { AiProviderSettingsLabels, AiProviderSettingsProps } from './AiProviderSettings'
 export { installScreenTips } from './screentip'
 export { AiTypingIndicator } from './AiTypingIndicator'
-export { IconSend, IconStop, type IconProps } from './icons'
+export { IconSend, IconStop, IconSettings, type IconProps } from './icons'
 export { Markdown } from './Markdown'
 export { isSymbolFontFamily } from './symbol-fonts'
 export {

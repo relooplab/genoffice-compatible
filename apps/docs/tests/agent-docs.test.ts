@@ -94,6 +94,14 @@ describe('word-count stats (answer-style requests)', () => {
     expect(context).toContain('3|p|This document is for reference only.')
   })
 
+  it('embeds the current text selection as model context', () => {
+    const editor = createEditor(fixture())
+    editor.commands.selectAll()
+    const context = buildDocContext(editor)
+    expect(context).toContain('Content selected by the user')
+    expect(context).toContain('GenSpark is an AI office suite.')
+  })
+
   it('get_document_context tool returns the same stats and does not modify the document', async () => {
     const editor = createEditor(fixture())
     const before = JSON.stringify(editor.getJSON())

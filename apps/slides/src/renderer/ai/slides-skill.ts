@@ -1370,6 +1370,13 @@ function preview(text: string, max = 50): string {
   return flat.length > max ? `${flat.slice(0, max)}…` : flat
 }
 
+/** Cap for the full selected-element / current-slide text injected into the deck context. */
+const SELECTED_TEXT_MAX_CHARS = 1200
+
+function clipText(text: string, max = SELECTED_TEXT_MAX_CHARS): string {
+  return text.length > max ? `${text.slice(0, max)}…` : text
+}
+
 function buildDeckOutline(slides: RenderSlide[], current: number, selectedIds: string[]): string {
   const canvas = slides[0] ? `Canvas ${slides[0].widthPx}×${slides[0].heightPx}px.` : ''
   const lines: string[] = [
@@ -1393,6 +1400,25 @@ function buildDeckOutline(slides: RenderSlide[], current: number, selectedIds: s
       lines.push(`  - ${n.id} | ${n.type}${n.text ? ` | "${preview(n.text)}"` : ''}`)
     }
   })
+  // Give the model the actual text the user is referring to, not just element ids:
+  // the full text of every selected element plus the currently shown slide's text.
+  const currentSlide = slides[current]
+  if (currentSlide) {
+    const curInfos = collectNodeInfos(currentSlide.nodes)
+    if (selectedIds.length > 0) {
+      const selTexts: string[] = []
+      for (const id of selectedIds) {
+        const t = curInfos.find((n) => n.id === id)?.text
+        if (t && t.trim()) selTexts.push(`${id}: "${clipText(t)}"`)
+      }
+      if (selTexts.length > 0) lines.push(`Selected element text: ${selTexts.join('; ')}`)
+    }
+    const curText = curInfos
+      .map((n) => n.text)
+      .filter((t): t is string => !!t && t.trim().length > 0)
+      .join(' | ')
+    if (curText) lines.push(`Current slide (page ${current + 1}) full text: ${clipText(curText)}`)
+  }
   lines.push('(Use read_slide to see element positions/sizes/colors)')
   return lines.join('\n')
 }

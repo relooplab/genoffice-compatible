@@ -4,12 +4,13 @@ import { AI_PROVIDERS, defaultAiSettings, resolveAiSettings } from '../src/provi
 describe('defaultAiSettings', () => {
   it('gives every provider its default model and an empty key by default', () => {
     const settings = defaultAiSettings()
-    expect(settings.provider).toBe('genspark')
+    // Defaults to an OpenAI-compatible endpoint keyed by an API key, not Genspark login
+    expect(settings.provider).toBe('custom')
     for (const meta of AI_PROVIDERS) {
       expect(settings.providers[meta.id].apiKey).toBe('')
       expect(settings.providers[meta.id].model).toBe(meta.defaultModel)
     }
-    expect(settings.providers.custom.baseUrl).toBe('')
+    expect(settings.providers.custom.baseUrl).toBe('https://api.openai.com/v1')
     expect(settings.providers.anthropic.baseUrl).toBeUndefined()
   })
 

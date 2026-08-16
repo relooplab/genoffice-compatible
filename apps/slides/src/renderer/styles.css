@@ -2941,6 +2941,72 @@ body.vib .slide-list {
   color: var(--accent);
   font-weight: 600;
 }
+/* AI provider settings modal (shared @genoffice/ui component) */
+.ai-provider-settings {
+  max-width: 460px;
+}
+
+.ai-provider-settings .modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.ai-provider-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.ai-provider-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.ai-provider-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: inherit;
+}
+
+.ai-provider-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ai-provider-gsk {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ai-provider-status {
+  font-size: 13px;
+}
+
+.ai-provider-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.ai-scope-hint {
+  font-size: 11.5px;
+  opacity: 0.75;
+  padding: 2px 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 
 .provider-dot {
   width: 6px;

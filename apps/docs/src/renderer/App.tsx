@@ -2911,6 +2911,7 @@ export function App() {
               onExpand={() => setShowAi(true)}
               onCollapse={() => setShowAi(false)}
               filePath={doc?.filePath ?? null}
+              onSettingsSaved={setSettings}
             />
           </div>
         )}

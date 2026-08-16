@@ -438,6 +438,8 @@ export function App(): React.JSX.Element {
   /// A1 label of the active cell, echoed live by the Name Box. Updated from
   /// the same SelectionChanged refresh that keeps selectionFormat current.
   const [activeCellA1, setActiveCellA1] = useState('')
+  /// Full A1 notation of the current selection (range), for the AI chat scope hint.
+  const [activeSelection, setActiveSelection] = useState('')
   /// Non-null while the Advanced Filter dialog is open: the column choices
   /// sampled from the active filter range's header row.
   const [advancedFilterColumns, setAdvancedFilterColumns] = useState<
@@ -969,9 +971,10 @@ export function App(): React.JSX.Element {
             }
             return next
           })
-          // Signed-out failures get an inline sign-in button; detected via
-          // gsk status rather than matching the localized error text
-          void window.desktopApi
+          // Signed-out failures get an inline sign-in button; only relevant for
+          // the Genspark provider (key providers show an API-key error instead)
+          if (aiSettingsRef.current?.provider === 'genspark') {
+            void window.desktopApi
             .aiGskStatus()
             .then((status) => {
               if (status.loggedIn) return
@@ -985,6 +988,7 @@ export function App(): React.JSX.Element {
               })
             })
             .catch(() => {})
+          }
           void autoSaveCompletedAiRun().finally(() => setAiBusy(false))
         },
       },
@@ -2791,9 +2795,15 @@ export function App(): React.JSX.Element {
     if (!range) {
       setSelectionFormat(null)
       setActiveCellA1('')
+      setActiveSelection('')
       return
     }
     setActiveCellA1(`${columnLetter(range.getColumn())}${range.getRow() + 1}`)
+    try {
+      setActiveSelection(range.getA1Notation())
+    } catch {
+      setActiveSelection('')
+    }
     let pattern: string
     try {
       pattern = range.getNumberFormat()
@@ -3227,6 +3237,8 @@ export function App(): React.JSX.Element {
         autoSave={autoSave}
         onAutoSaveChange={setAutoSave}
         selectedChart={selectedChart}
+        aiSettings={aiSettings}
+        onAiSettingsSaved={setAiSettingsState}
         onGetSortColumns={sortColumnOptions}
         onGetSheetProtection={sheetProtectionEcho}
         onGetDefinedNames={definedNameRows}
@@ -3241,6 +3253,7 @@ export function App(): React.JSX.Element {
         onGetActiveCell={() => activeCellLabelImpl(dataToolsContext())}
         onGetAnchorValue={anchorCellValue}
         activeCellA1={activeCellA1}
+        activeSelection={activeSelection}
         onGoToReference={(ref) => goToReferenceImpl(dataToolsContext(), ref)}
         onListDefinedNames={() => listDefinedNamesImpl(dataToolsContext())}
         onApplyFormula={(formula) => handleApplyFormulaImpl(dataToolsContext(), formula)}

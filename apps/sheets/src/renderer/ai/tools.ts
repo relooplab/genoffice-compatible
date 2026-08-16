@@ -90,6 +90,8 @@ const MAX_READBACK_FORMULAS = 10
 /** Read-back after write: wait time (ms) for Univer's async formula recalc */
 const FORMULA_RECALC_DELAY_MS = 300
 const MAX_READ_FORMAT_CELLS = 200
+/** Cap on the current selection's cells auto-injected into per-turn context (best-effort). */
+const MAX_SELECTION_CONTEXT_CELLS = 200
 
 export const WORKBOOK_TOOLS: AgentToolDef[] = [
   {
@@ -227,6 +229,36 @@ const fail = (summary: string, output: string): ToolExecution => ({
   summary,
 })
 
+/** Best-effort dump of the current selection's cell values (capped) so the model
+ *  understands what the user is referring to without an extra read_range call. */
+function buildSelectionValues(deps: SheetsSkillDeps, selection: string): string {
+  let bounds: RangeBounds
+  try {
+    bounds = parseRange(selection)
+  } catch {
+    return ''
+  }
+  if (rangeCellCount(bounds) > MAX_SELECTION_CONTEXT_CELLS) return ''
+  const addresses: string[] = []
+  for (let r = bounds.startRow; r <= bounds.endRow; r++) {
+    for (let c = bounds.startColumn; c <= bounds.endColumn; c++) {
+      addresses.push(formatAddress(r, c))
+    }
+  }
+  const cells = deps.readCells(addresses)
+  const rows: string[] = []
+  for (let r = bounds.startRow; r <= bounds.endRow; r++) {
+    const line: string[] = []
+    for (let c = bounds.startColumn; c <= bounds.endColumn; c++) {
+      const addr = formatAddress(r, c)
+      const cell = cells[addr]
+      line.push(cell ? `${addr} = ${formatCellScalar(cell)}` : addr)
+    }
+    rows.push(line.join('  |  '))
+  }
+  return rows.join('\n')
+}
+
 export function buildWorkbookContext(deps: SheetsSkillDeps): string {
   const info = deps.getActiveSheetInfo()
   if (info.mode === 'none') return 'No workbook is currently open.'
@@ -254,6 +286,10 @@ export function buildWorkbookContext(deps: SheetsSkillDeps): string {
   }
   if (info.selection) {
     lines.push(`Current selection: ${info.selection}`)
+    // Embed the selected cells' values so the model knows what the user is
+    // referring to without an extra read_range (best-effort, capped).
+    const selValues = buildSelectionValues(deps, info.selection)
+    if (selValues) lines.push(`Selection values:\n${selValues}`)
   }
   if (info.loadedRange) {
     lines.push(`Currently loaded viewport: ${info.loadedRange} (not the worksheet data extent)`)
