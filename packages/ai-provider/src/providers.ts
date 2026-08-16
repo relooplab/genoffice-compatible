@@ -1,5 +1,4 @@
 import type { AiProviderId, AiProviderMeta, AiSettings, LegacyAiSettings } from './types'
-
 /**
  * Genspark server-side LLM proxy endpoints. All three protocols share the
  * api_key from the gsk login; model ids follow the proxy's own naming scheme,
@@ -42,6 +41,7 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
     ],
     defaultModel: 'claude-opus-4-7',
     keyPlaceholder: 'Not required - sign in to Genspark',
+    supportsReasoningEffort: true,
   },
   {
     id: 'anthropic',
@@ -72,6 +72,7 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
     models: ['deepseek-chat', 'deepseek-reasoner'],
     defaultModel: 'deepseek-chat',
     keyPlaceholder: 'sk-...',
+    supportsReasoningEffort: true,
   },
   {
     id: 'openai',
@@ -79,6 +80,7 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
     models: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini'],
     defaultModel: 'gpt-4.1-mini',
     keyPlaceholder: 'sk-...',
+    supportsReasoningEffort: true,
   },
   {
     id: 'custom',
@@ -87,6 +89,7 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
     defaultModel: '',
     keyPlaceholder: 'API Key',
     needsBaseUrl: true,
+    supportsReasoningEffort: true,
   },
 ]
 
@@ -109,7 +112,21 @@ export function defaultAiSettings(
   }
   // The default provider is an OpenAI-compatible endpoint keyed by an API key,
   // so no Genspark account (gsk login) is required out of the box.
-  return { provider: 'custom', providers }
+  return { provider: 'custom', providers, customSystemPrompt: '', workspaceMemory: '' }
+}
+
+/**
+ * User-authored system suffix (custom system prompt + persistent workspace
+ * memory). Apps append this to their agent's systemSuffix; empty when neither
+ * is set. Exported so every host composes consistently.
+ */
+export function buildUserSystemSuffix(settings?: Partial<AiSettings> | null): string {
+  const sys = settings?.customSystemPrompt?.trim()
+  const mem = settings?.workspaceMemory?.trim()
+  const parts: string[] = []
+  if (sys) parts.push(`User instructions (follow these):\n${sys}`)
+  if (mem) parts.push(`Persistent workspace notes (the user's own memory):\n${mem}`)
+  return parts.length ? `\n\n${parts.join('\n\n')}` : ''
 }
 
 /**
@@ -130,10 +147,14 @@ export function resolveAiSettings(
         baseUrl: stored.baseUrl ?? DEFAULT_CUSTOM_BASE_URL,
       }
     }
+    defaults.customSystemPrompt = stored.customSystemPrompt ?? defaults.customSystemPrompt
+    defaults.workspaceMemory = stored.workspaceMemory ?? defaults.workspaceMemory
     return defaults
   }
   return {
     provider: stored.provider ?? defaults.provider,
     providers: { ...defaults.providers, ...stored.providers },
+    customSystemPrompt: stored.customSystemPrompt ?? defaults.customSystemPrompt,
+    workspaceMemory: stored.workspaceMemory ?? defaults.workspaceMemory,
   }
 }

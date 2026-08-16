@@ -104,6 +104,7 @@ async function chatOpenAiCompatible(
         { role: 'user', content: user },
       ],
       temperature: 0.3,
+      ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
     }),
   })
   wd.touch()

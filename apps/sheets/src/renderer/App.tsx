@@ -105,7 +105,7 @@ import {
   composeSkills,
   type AgentImage,
 } from '@genoffice/agent-core'
-import type { AiSettings } from '@genoffice/ai-provider'
+import { buildUserSystemSuffix, type AiSettings } from '@genoffice/ai-provider'
 import { type WorkbookOperation } from '../domain/workbook-dsl'
 import { columnIndex, columnLabel, parseAddress, parseRange } from '../domain/cell-address'
 import {
@@ -833,7 +833,7 @@ export function App(): React.JSX.Element {
   if (!agentLoopRef.current) {
     agentLoopRef.current = new AgentLoop({
       transport: createElectronTransport(() => aiSettingsRef.current!),
-      systemSuffix: aiLangDirective,
+      systemSuffix: () => aiLangDirective() + buildUserSystemSuffix(aiSettingsRef.current),
       skill: composeSkills('sheets+files', '', [
         createWorkbookSkill(sheetsSkillDeps()),
         createFilesSkill(availableAttachments),

@@ -13,6 +13,7 @@ export type {
 export {
   AI_PROVIDERS,
   GENSPARK_LLM_BASE_URLS,
+  buildUserSystemSuffix,
   defaultAiSettings,
   resolveAiSettings,
 } from './providers'

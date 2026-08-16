@@ -741,6 +741,7 @@ async function openAiCompatibleTurn(
           }
         : {}),
       temperature: 0.3,
+      ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
       stream: true,
     }),
   })

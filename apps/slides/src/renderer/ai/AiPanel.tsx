@@ -9,6 +9,7 @@ import {
 import type { RenderSlide } from '@genoffice/pptx-render'
 import type { AiSettings, AttachmentAddResult, AttachmentMeta } from '../../shared/ipc'
 import { ATTACHMENT_IMAGE_EXTS, AI_PROVIDERS } from '../../shared/ipc'
+import { buildUserSystemSuffix } from '@genoffice/ai-provider'
 import {
   createSlidesSkill,
   type DeckAccess,
@@ -1164,7 +1165,7 @@ export function AiPanel({
     accessRef.current = access
     loopRef.current = new AgentLoop({
       transport: createElectronTransport(() => settingsRef.current),
-      systemSuffix: aiLangDirective,
+      systemSuffix: () => aiLangDirective() + buildUserSystemSuffix(settingsRef.current),
       skill: composeSkills('slides+files', '', [
         createSlidesSkill(access),
         createFilesSkill(availableAttachments, (path) => readAttachmentPathsRef.current.add(path)),
@@ -1503,7 +1504,7 @@ export function AiPanel({
           transport,
           pageIndex: page,
           screenshot: shot,
-          systemSuffix: aiLangDirective,
+          systemSuffix: () => aiLangDirective() + buildUserSystemSuffix(settingsRef.current),
           signal: controller.signal,
         })
         const batchId = batchOpened ? await window.slidesApi.endHistoryBatch() : null
@@ -2101,6 +2102,15 @@ export function AiPanel({
             gskLoggedIn: t('aiProviderLoggedIn'),
             gskNotLoggedIn: t('aiProviderNotLoggedIn'),
             keyPlaceholder: 'API Key',
+            reasoningEffort: t('aiReasoningEffort'),
+            reasoningDefault: t('aiReasoningDefault'),
+            reasoningLow: t('aiReasoningLow'),
+            reasoningMedium: t('aiReasoningMedium'),
+            reasoningHigh: t('aiReasoningHigh'),
+            systemPrompt: t('aiSystemPrompt'),
+            systemPromptPlaceholder: t('aiSystemPromptPlaceholder'),
+            memory: t('aiMemory'),
+            memoryPlaceholder: t('aiMemoryPlaceholder'),
           }}
           gskAuth={gskAuth}
           onOpenLogin={() => void window.slidesApi.aiGskLogin()}

@@ -19,6 +19,18 @@ export interface AiProviderSettingsLabels {
   gskLoggedIn: string
   gskNotLoggedIn: string
   keyPlaceholder: string
+  /* reasoning effort (OpenAI-compatible) */
+  reasoningEffort: string
+  reasoningDefault: string
+  reasoningLow: string
+  reasoningMedium: string
+  reasoningHigh: string
+  /* user-authored system prompt */
+  systemPrompt: string
+  systemPromptPlaceholder: string
+  /* persistent workspace memory/notes */
+  memory: string
+  memoryPlaceholder: string
 }
 
 export interface AiProviderSettingsProps {
@@ -40,7 +52,12 @@ function deepClone(settings: AiSettings): AiSettings {
   for (const id of Object.keys(settings.providers) as AiProviderId[]) {
     providers[id] = { ...settings.providers[id] }
   }
-  return { provider: settings.provider, providers }
+  return {
+    provider: settings.provider,
+    providers,
+    customSystemPrompt: settings.customSystemPrompt ?? '',
+    workspaceMemory: settings.workspaceMemory ?? '',
+  }
 }
 
 export function AiProviderSettings({
@@ -166,8 +183,53 @@ return (
                 />
               </label>
             )}
+            {meta?.supportsReasoningEffort && (
+              <label className="ai-provider-field">
+                <span className="ai-provider-label">{labels.reasoningEffort}</span>
+                <select
+                  className="ai-provider-input"
+                  value={draft.providers[draft.provider].reasoningEffort ?? ''}
+                  onChange={(e) =>
+                    patchConfig({
+                      reasoningEffort: (e.target.value || undefined) as
+                        | 'low'
+                        | 'medium'
+                        | 'high'
+                        | undefined,
+                    })
+                  }
+                >
+                  <option value="">{labels.reasoningDefault}</option>
+                  <option value="low">{labels.reasoningLow}</option>
+                  <option value="medium">{labels.reasoningMedium}</option>
+                  <option value="high">{labels.reasoningHigh}</option>
+                </select>
+              </label>
+            )}
           </>
         )}
+
+        <label className="ai-provider-field">
+          <span className="ai-provider-label">{labels.systemPrompt}</span>
+          <textarea
+            className="ai-provider-input ai-provider-textarea"
+            rows={3}
+            value={draft.customSystemPrompt ?? ''}
+            placeholder={labels.systemPromptPlaceholder}
+            onChange={(e) => setDraft((d) => ({ ...d, customSystemPrompt: e.target.value }))}
+          />
+        </label>
+
+        <label className="ai-provider-field">
+          <span className="ai-provider-label">{labels.memory}</span>
+          <textarea
+            className="ai-provider-input ai-provider-textarea"
+            rows={3}
+            value={draft.workspaceMemory ?? ''}
+            placeholder={labels.memoryPlaceholder}
+            onChange={(e) => setDraft((d) => ({ ...d, workspaceMemory: e.target.value }))}
+          />
+        </label>
 
         <div className="modal-actions">
           <button onClick={onClose}>{labels.cancel}</button>

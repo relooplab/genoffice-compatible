@@ -775,6 +775,15 @@ export function AiChatPanel({
             gskLoggedIn: t('aiProviderLoggedIn'),
             gskNotLoggedIn: t('aiProviderNotLoggedIn'),
             keyPlaceholder: 'API Key',
+            reasoningEffort: t('aiReasoningEffort'),
+            reasoningDefault: t('aiReasoningDefault'),
+            reasoningLow: t('aiReasoningLow'),
+            reasoningMedium: t('aiReasoningMedium'),
+            reasoningHigh: t('aiReasoningHigh'),
+            systemPrompt: t('aiSystemPrompt'),
+            systemPromptPlaceholder: t('aiSystemPromptPlaceholder'),
+            memory: t('aiMemory'),
+            memoryPlaceholder: t('aiMemoryPlaceholder'),
           }}
           gskAuth={gskAuth}
           onOpenLogin={() => void window.desktopApi.aiGskLogin()}

@@ -13,6 +13,8 @@ export interface AiProviderConfig {
   model: string
   /** only used by the custom (OpenAI-compatible) provider */
   baseUrl?: string | undefined
+  /** OpenAI-compatible reasoning effort (o-series models); undefined = model default */
+  reasoningEffort?: 'low' | 'medium' | 'high' | undefined
 }
 
 export interface AiProviderMeta {
@@ -22,11 +24,17 @@ export interface AiProviderMeta {
   defaultModel: string
   keyPlaceholder: string
   needsBaseUrl?: boolean
+  /** OpenAI-compatible providers that accept `reasoning_effort` (o-series style) */
+  supportsReasoningEffort?: boolean
 }
 
 export interface AiSettings {
   provider: AiProviderId
   providers: Record<AiProviderId, AiProviderConfig>
+  /** user-authored system prompt appended to the agent's system message (persisted) */
+  customSystemPrompt?: string | undefined
+  /** user-authored persistent notes injected into every turn's context (persists across sessions) */
+  workspaceMemory?: string | undefined
 }
 
 /** pre-provider settings shape (single OpenAI-compatible endpoint); migrated into "custom" */

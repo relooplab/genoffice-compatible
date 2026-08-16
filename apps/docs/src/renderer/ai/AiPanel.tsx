@@ -4,8 +4,9 @@ import type { Block } from '@genoffice/docx-engine'
 import { AgentLoop, composeSkills, type AgentImage } from '@genoffice/agent-core'
 import type { AiSettings, AttachmentAddResult, AttachmentMeta } from '../../shared/ipc'
 import { ATTACHMENT_IMAGE_EXTS, AI_PROVIDERS } from '../../shared/ipc'
+import { buildUserSystemSuffix } from '@genoffice/ai-provider'
 import type { PmNode } from '../editor/convert'
-import { findNumId, type NumIds } from './protocol'
+import { findNumId, getSelectionScope, type NumIds } from './protocol'
 import { markDocSeen } from './tools'
 import { createDocsSkill } from './docs-skill'
 import { applyRevisionsBy } from '../editor/revisions'
@@ -557,7 +558,7 @@ export function AiPanel({
     })
     loopRef.current = new AgentLoop<PmNode>({
       transport: createElectronTransport(() => settingsRef.current),
-      systemSuffix: aiLangDirective,
+      systemSuffix: () => aiLangDirective() + buildUserSystemSuffix(settingsRef.current),
       maxTurns: DOCS_AGENT_MAX_TURNS,
       skill: composeSkills('docs+files', '', [
         createDocsSkill(
@@ -1177,6 +1178,15 @@ export function AiPanel({
 
       <div className="ai-composer">
         {attachNotice && <div className="ai-attach-notice">{attachNotice}</div>}
+        <div className="ai-scope-hint">
+          {docEmpty
+            ? t('aiScopeEmptyDoc')
+            : getSelectionScope(editor).isRange
+              ? t('aiScopeSelected', {
+                  count: getSelectionScope(editor).endIndex - getSelectionScope(editor).startIndex + 1,
+                })
+              : t('aiScopeCursor')}
+        </div>
         <AiComposer
           header={
             attachments.length > 0 && (
@@ -1295,6 +1305,15 @@ export function AiPanel({
             gskLoggedIn: t('aiProviderLoggedIn'),
             gskNotLoggedIn: t('aiProviderNotLoggedIn'),
             keyPlaceholder: 'API Key',
+            reasoningEffort: t('aiReasoningEffort'),
+            reasoningDefault: t('aiReasoningDefault'),
+            reasoningLow: t('aiReasoningLow'),
+            reasoningMedium: t('aiReasoningMedium'),
+            reasoningHigh: t('aiReasoningHigh'),
+            systemPrompt: t('aiSystemPrompt'),
+            systemPromptPlaceholder: t('aiSystemPromptPlaceholder'),
+            memory: t('aiMemory'),
+            memoryPlaceholder: t('aiMemoryPlaceholder'),
           }}
           gskAuth={gskAuth}
           onOpenLogin={() => void window.desktop.aiGskLogin()}

@@ -1733,6 +1733,7 @@ const aiProviderConfigSchema = z
     apiKey: z.string(),
     model: z.string(),
     baseUrl: z.string().optional(),
+    reasoningEffort: z.enum(['low', 'medium', 'high']).optional(),
   })
   .strict()
 
@@ -1740,6 +1741,8 @@ export const aiSettingsInputSchema = z
   .object({
     provider: z.string().min(1),
     providers: z.record(z.string(), aiProviderConfigSchema),
+    customSystemPrompt: z.string().optional(),
+    workspaceMemory: z.string().optional(),
   })
   .strict()
 

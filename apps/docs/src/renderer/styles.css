@@ -6411,6 +6411,15 @@ body.docs-crop-active
 .ai-provider-hint {
   font-size: 12px;
   opacity: 0.7;
+.ai-scope-hint {
+  font-size: 11.5px;
+  opacity: 0.75;
+  padding: 2px 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 }
 
 .provider-dot {

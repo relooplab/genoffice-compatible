@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, ReactElement, ReactNode } from 'react'
 import { AgentLoop, composeSkills } from '@genoffice/agent-core'
-import { AI_PROVIDERS, type AiSettings } from '@genoffice/ai-provider'
+import { AI_PROVIDERS, type AiSettings, buildUserSystemSuffix } from '@genoffice/ai-provider'
 import { AiComposer, AiTypingIndicator, Markdown, AiProviderSettings, IconSettings } from '@genoffice/ui'
 import type { Editor } from '@tiptap/core'
 import { aiLangDirective, t as tGlobal, useI18n } from '../i18n/locale'
@@ -180,7 +180,7 @@ export function AiPanel({
         createSearchSkill(),
       ]),
       captureSnapshot: () => depsRef.current.getSnapshot(),
-      systemSuffix: () => aiLangDirective(langRef.current),
+      systemSuffix: () => aiLangDirective(langRef.current) + buildUserSystemSuffix(settingsRef.current),
       events: {
         onText: (text) => patchLast({ text }),
         onToolStart: (call) => {
@@ -673,6 +673,15 @@ export function AiPanel({
             gskLoggedIn: t('aiProviderLoggedIn'),
             gskNotLoggedIn: t('aiProviderNotLoggedIn'),
             keyPlaceholder: 'API Key',
+            reasoningEffort: t('aiReasoningEffort'),
+            reasoningDefault: t('aiReasoningDefault'),
+            reasoningLow: t('aiReasoningLow'),
+            reasoningMedium: t('aiReasoningMedium'),
+            reasoningHigh: t('aiReasoningHigh'),
+            systemPrompt: t('aiSystemPrompt'),
+            systemPromptPlaceholder: t('aiSystemPromptPlaceholder'),
+            memory: t('aiMemory'),
+            memoryPlaceholder: t('aiMemoryPlaceholder'),
           }}
           onSave={(draft) => {
             setShowProviderSettings(false)
