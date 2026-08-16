@@ -29,6 +29,8 @@ layer.
 - **PowerPoint-compatible presentations** — in-house `.pptx` engine with masters, layouts, smart guides, non-destructive crop.
 - **Markdown to Word, fully local** — the same OOXML engine, no Pandoc, no cloud.
 - **AI that edits documents** — block-level edits with snapshots and diffs, document-aware agents.
+- **Bring-your-own AI provider** — run the AI panel with your own API key (Anthropic Claude, Google Gemini, DeepSeek, OpenAI) or any OpenAI-compatible custom endpoint; a Genspark sign-in option is still available.
+- **AI provider settings** — pick the active provider and set its API key, base URL, and model from the AI panel settings dialog in every app.
 - **Agent tools built in** — web/image search, image generation, media analysis.
 - **Light / dark / system themes.**
 - **macOS, Windows, Linux.**
@@ -93,8 +95,17 @@ tokens (`packages/ui`), with a CI guard that keeps chrome colors on the token
 system. Document surfaces stay light in dark mode — Word-style dark chrome
 around white paper — so files render and export identically in both themes.
 
-**AI backend (Genspark).** The apps sign in to a Genspark account through a
-device-code flow; no model API key is entered or stored by the user. Model
+**AI backend — bring your own provider (or Genspark).** Every app now includes
+an **AI provider settings** dialog (AI panel → settings) to pick the active
+provider and configure its API key, base URL, and model. Alongside the built-in
+Genspark option you can bring your own key for Anthropic Claude, Google Gemini,
+DeepSeek, or OpenAI, or point at any **Custom** OpenAI-compatible endpoint
+(base URL + API key + free-text model). The default is a BYO-key custom
+endpoint, so AI editing no longer requires a Genspark account.
+
+**AI backend (Genspark, optional).** The apps can still sign in to a Genspark
+account through a device-code flow; no model API key is entered or stored by
+the user in that mode. Model
 calls route through the Genspark proxy (Claude, GPT, and Gemini families).
 The same account also unlocks the Genspark ("gsk") tool endpoints the agents
 build on — web and image search, image generation and editing,
@@ -217,10 +228,16 @@ Caladea, Noto CJK subsets) are OFL/Apache.
 
 ## License
 
-GenOffice is licensed under the [Apache License 2.0](LICENSE), with one
-exception: the `ee/` directory is reserved for future enterprise modules and
-is covered by the [GenOffice Enterprise License](ee/LICENSE).
+This repository is a **fork of GenOffice**. The open-source core is licensed
+under the [Apache License 2.0](LICENSE), with one exception: the `ee/`
+directory is reserved for future enterprise modules and is covered by the
+[GenOffice Enterprise License](ee/LICENSE).
+
+Fork history and material changes are recorded in
+[MODIFICATIONS.md](MODIFICATIONS.md), and the upstream NOTICE is preserved
+(see [NOTICE](NOTICE)). `npm run notices` generates the bundled third-party
+license summary from a source checkout.
 
 The GenOffice and Genspark names and logos are trademarks of Mainfunc, Inc.
 The Apache-2.0 license does not grant permission to use them (see section 6);
-forks should use their own branding.
+this project uses its own branding (ReLoop Office).
