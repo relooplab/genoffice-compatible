@@ -93,6 +93,38 @@ describe('chatForProvider', () => {
     )
   })
 
+  it('custom: sends reasoning_effort and omits temperature when set', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ choices: [{ message: { content: 'ok' } }] }))
+    vi.stubGlobal('fetch', fetchMock)
+    await chatForProvider(
+      'custom',
+      { apiKey: 'k', model: 'gpt-5.2', baseUrl: 'https://x/v1', reasoningEffort: 'high' },
+      'sys',
+      'hi',
+    )
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.reasoning_effort).toBe('high')
+    expect(body.temperature).toBeUndefined()
+  })
+
+  it('custom: sends temperature (not reasoning_effort) by default', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ choices: [{ message: { content: 'ok' } }] }))
+    vi.stubGlobal('fetch', fetchMock)
+    await chatForProvider(
+      'custom',
+      { apiKey: 'k', model: 'm', baseUrl: 'https://x/v1' },
+      'sys',
+      'hi',
+    )
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.temperature).toBe(0.3)
+    expect(body.reasoning_effort).toBeUndefined()
+  })
+
   it('custom: rejects without a base URL, without calling fetch', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)

@@ -77,7 +77,17 @@ export const AI_PROVIDERS: AiProviderMeta[] = [
   {
     id: 'openai',
     label: 'OpenAI',
-    models: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini'],
+    models: [
+      // reasoning models accept reasoning_effort (low/medium/high); the rest ignore/unsupported
+      'gpt-5.2',
+      'gpt-5',
+      'o4-mini',
+      'o3',
+      'gpt-4.1',
+      'gpt-4.1-mini',
+      'gpt-4o',
+      'gpt-4o-mini',
+    ],
     defaultModel: 'gpt-4.1-mini',
     keyPlaceholder: 'sk-...',
     supportsReasoningEffort: true,

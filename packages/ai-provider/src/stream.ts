@@ -740,8 +740,10 @@ async function openAiCompatibleTurn(
             })),
           }
         : {}),
-      temperature: 0.3,
-      ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
+      // o-series models forbid temperature != 1; send it only when not using reasoning_effort.
+      ...(config.reasoningEffort
+        ? { reasoning_effort: config.reasoningEffort }
+        : { temperature: 0.3 }),
       stream: true,
     }),
   })

@@ -103,8 +103,10 @@ async function chatOpenAiCompatible(
         { role: 'system', content: system },
         { role: 'user', content: user },
       ],
-      temperature: 0.3,
-      ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
+      // o-series models forbid temperature != 1; send it only when not using reasoning_effort.
+      ...(config.reasoningEffort
+        ? { reasoning_effort: config.reasoningEffort }
+        : { temperature: 0.3 }),
     }),
   })
   wd.touch()
